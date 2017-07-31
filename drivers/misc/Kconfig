@@ -601,12 +601,22 @@ config TEST_IRQ_REQUESTER
 	  interrupt handling.
 
 	  If in doubt, say N.
-
+7
 config SIMTRAY_STATUS
 	tristate "Xiaomi SIM tray status"
 	default n
 	help
 	  Say 'y' here to support SIM tray GPIO detection
+config LDO_WL2866D
+	bool  "multi ldo wl2866d"
+	---help---
+	This option enables multi ldo wl2866d.
+
+config FORCE_FAST_CHARGE
+	bool "Force faster charge rate for USB"
+	default y
+	help
+	  This allows users to override default charge rate for USB
 
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
