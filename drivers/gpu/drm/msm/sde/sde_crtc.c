@@ -21,6 +21,8 @@
 #include <linux/sort.h>
 #include <linux/debugfs.h>
 #include <linux/ktime.h>
+#include <linux/cpu_input_boost.h>
+#include <linux/devfreq_boost.h>
 #include <uapi/drm/sde_drm.h>
 #include <drm/drm_mode.h>
 #include <drm/drm_crtc.h>
@@ -4555,6 +4557,9 @@ void sde_crtc_commit_kickoff(struct drm_crtc *crtc,
 
 	fod_sync_info = sde_crtc_get_mi_fod_sync_info(cstate);
 	_sde_crtc_mi_update_state(cstate, fod_sync_info);
+
+	devfreq_boost_kick(DEVFREQ_MSM_CPUBW);
+	cpu_input_boost_kick();
 
 	list_for_each_entry(encoder, &dev->mode_config.encoder_list, head) {
 		struct sde_encoder_kickoff_params params = { 0 };
