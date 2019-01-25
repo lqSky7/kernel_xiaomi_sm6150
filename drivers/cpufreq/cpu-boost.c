@@ -1,6 +1,10 @@
 /*
+
  * Copyright (c) 2013-2015,2017,2020 The Linux Foundation. All rights reserved.
  * Copyright (C) 2021 XiaoMi, Inc.
+ * Copyright (c) 2013-2015,2017, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2017-2018, Paranoid Android.
+ * Copyright (C) 2017-2018, Razer Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -69,6 +73,9 @@ static int dynamic_stune_boost;
 module_param(dynamic_stune_boost, uint, 0644);
 static bool stune_boost_active;
 static int boost_slot;
+static unsigned int dynamic_stune_boost_ms = 40;
+module_param(dynamic_stune_boost_ms, uint, 0644);
+static struct delayed_work dynamic_stune_boost_rem;
 #endif /* CONFIG_DYNAMIC_STUNE_BOOST */
 
 static struct delayed_work input_boost_rem;
@@ -242,14 +249,6 @@ static void do_input_boost_rem(struct work_struct *work)
 		i_sync_info->input_boost_min = 0;
 	}
 
-#ifdef CONFIG_DYNAMIC_STUNE_BOOST
-	/* Reset dynamic stune boost value to the default value */
-	if (stune_boost_active) {
-		reset_stune_boost("top-app", boost_slot);
-		stune_boost_active = false;
-	}
-#endif /* CONFIG_DYNAMIC_STUNE_BOOST */
-
 	/* Update policies for all online CPUs */
 	update_policy_online();
 
@@ -266,11 +265,25 @@ static void do_input_boost_rem(struct work_struct *work)
 	}
 }
 
+#ifdef CONFIG_DYNAMIC_STUNE_BOOST
+static void do_dynamic_stune_boost_rem(struct work_struct *work)
+{
+	/* Reset dynamic stune boost value to the default value */
+	if (stune_boost_active) {
+		reset_stune_boost("top-app", boost_slot);
+		stune_boost_active = false;
+	}
+}
+#endif /* CONFIG_DYNAMIC_STUNE_BOOST */
+
 static void do_input_boost(struct kthread_work *work)
 {
 	unsigned int i, ret;
 	struct cpu_sync *i_sync_info;
 
+#ifdef CONFIG_DYNAMIC_STUNE_BOOST
+	cancel_delayed_work_sync(&dynamic_stune_boost_rem);
+#endif /* CONFIG_DYNAMIC_STUNE_BOOST */
 	cancel_delayed_work_sync(&input_boost_rem);
 	if (sched_boost_active) {
 		sched_set_boost(0);
@@ -316,6 +329,8 @@ static void do_input_boost(struct kthread_work *work)
 	ret = do_stune_boost("top-app", dynamic_stune_boost, &boost_slot);
 	if (!ret)
 		stune_boost_active = true;
+
+	schedule_delayed_work(&dynamic_stune_boost_rem, msecs_to_jiffies(dynamic_stune_boost_ms));
 #endif /* CONFIG_DYNAMIC_STUNE_BOOST */
 
 	schedule_delayed_work(&input_boost_rem, msecs_to_jiffies(input_boost_ms));
@@ -351,20 +366,21 @@ static void do_powerkey_input_boost(struct work_struct *work)
 			sched_boost_active = true;
 	}
 
-<<<<<<< HEAD
 	queue_delayed_work(cpu_boost_wq, &input_boost_rem,
 					msecs_to_jiffies(powerkey_input_boost_ms));
-=======
+
 #ifdef CONFIG_DYNAMIC_STUNE_BOOST
 	/* Set dynamic stune boost value */
 	ret = do_stune_boost("top-app", dynamic_stune_boost, &boost_slot);
 	if (!ret)
 		stune_boost_active = true;
+
+	schedule_delayed_work(&dynamic_stune_boost_rem, msecs_to_jiffies(powerkey_input_boost_ms));
 #endif /* CONFIG_DYNAMIC_STUNE_BOOST */
 
 	schedule_delayed_work(&input_boost_rem,
 				msecs_to_jiffies(powerkey_input_boost_ms));
->>>>>>> 1f2604a4dc4a... cpu-boost: Implement Dynamic SchedTune Boost v3
+
 }
 
 static void cpuboost_input_event(struct input_handle *handle,
@@ -524,6 +540,9 @@ static int cpu_boost_init(void)
 	sched_setscheduler(cpu_boost_worker_thread, SCHED_FIFO, &param);
 	kthread_init_work(&input_boost_work, do_input_boost);
 	INIT_DELAYED_WORK(&input_boost_rem, do_input_boost_rem);
+#ifdef CONFIG_DYNAMIC_STUNE_BOOST
+	INIT_DELAYED_WORK(&dynamic_stune_boost_rem, do_dynamic_stune_boost_rem);
+#endif /* CONFIG_DYNAMIC_STUNE_BOOST */
 
 	for_each_possible_cpu(cpu) {
 		s = &per_cpu(sync_info, cpu);
