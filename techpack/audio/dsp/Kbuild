@@ -158,6 +158,8 @@ CDEFINES +=	-DANI_LITTLE_BYTE_ENDIAN \
 		-Werror\
 		-D__linux__
 
+CDEFINES += -DCONFIG_SND_SOC_TFA9874_FOR_DAVI
+
 KBUILD_CPPFLAGS += $(CDEFINES)
 
 # Currently, for versions of gcc which support it, the kernel Makefile
