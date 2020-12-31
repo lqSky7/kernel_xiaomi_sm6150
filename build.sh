@@ -23,7 +23,7 @@ fi
 KERNEL_DEFCONFIG=phoenix_defconfig
 ANYKERNEL3_DIR=$PWD/AnyKernel3/
 KERNELDIR=$PWD/
-FINAL_KERNEL_ZIP=DuskMane_v1.0.zip
+FINAL_KERNEL_ZIP=Dart_v1.1.zip
 export PATH="${PWD}/clang/bin:${PATH}"
 export ARCH=arm64
 export SUBARCH=arm64
