@@ -601,7 +601,7 @@ config TEST_IRQ_REQUESTER
 	  interrupt handling.
 
 	  If in doubt, say N.
-7
+
 config SIMTRAY_STATUS
 	tristate "Xiaomi SIM tray status"
 	default n
