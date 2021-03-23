@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=HAPPY BOOTLOOP, GIVE ME LOGS FROM sys/fs/pstore
+kernel.string=Meow Meow
 do.devicecheck=1
 do.modules=0
 do.cleanup=1

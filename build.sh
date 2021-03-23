@@ -16,7 +16,7 @@ export CONFIG_PATH=$PWD/arch/arm64/configs/phoenix_defconfig
 export PATH=$PWD/clang/bin:$PATH
 
 export ARCH=arm64
-export KBUILD_BUILD_HOST=DartKernel
+export KBUILD_BUILD_HOST=Cato
 export KBUILD_BUILD_USER="CatInIce69"
 
 # Send sticker
@@ -82,7 +82,7 @@ fi
 
 function zipping() {
     cd AnyKernel || exit 1
-    zip -r9 DartKernel-phoenix-${TANGGAL}.zip *
+    zip -r9 Cato-phoenix.zip *
     cd ..
 }
 sendinfo
