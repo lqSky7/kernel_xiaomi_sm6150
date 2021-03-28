@@ -1068,8 +1068,6 @@ static char *files_array[] = {
 	"lspeed",
 	"nfsinjector",
 	"gaming",
-        "telegram",
-	"nekogram",
 	"weareravens",
 	"akira",
 	"injector",
