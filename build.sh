@@ -2,13 +2,14 @@
 
 echo "Kanging shits"
 
-git clone --depth=1 https://github.com/Catinice/kernel_xiaomi_phoenix -b q2 kernel
+git clone --depth=1 https://github.com/Catinice/kernel_xiaomi_phoenix -b R kernel
 cd kernel
 git clone --depth=1 https://github.com/kdrag0n/proton-clang clang
 
 echo "Kanged!"
 
-IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
+IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz
+DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
 TANGGAL=$(date +"%F-%S")
 START=$(date +"%s")
 CLANG_VERSION=$(clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
@@ -16,8 +17,8 @@ export CONFIG_PATH=$PWD/arch/arm64/configs/phoenix_defconfig
 export PATH=$PWD/clang/bin:$PATH
 
 export ARCH=arm64
-export KBUILD_BUILD_HOST=DartKernel
-export KBUILD_BUILD_USER="CatInIce69"
+export KBUILD_BUILD_HOST=cato
+export KBUILD_BUILD_USER="Ca5"
 
 # Send sticker
 
@@ -32,7 +33,7 @@ function sendinfo() {
         -d chat_id="$chat_id" \
         -d "disable_web_page_preview=true" \
         -d "parse_mode=html" \
-        -d text="<b>• DartKernel R oss •</b>%0ABuild started on <code>Circle CI/CD</code>%0A <b>For device</b> <i>Xiaomi Poco X2/Redmi K30 (phoenix)</i>%0A<b>branch:-</b> <code>$(git rev-parse --abbrev-ref HEAD)</code>(master)%0A<b>Under commit</b> <code>$(git log --pretty=format:'"%h : %s"' -1)</code>%0A<b>Using compiler:- </b> <code>$CLANG_VERSION</code>%0A<b>Started on:- </b> <code>$(date)</code>%0A<b>Build Status:</b> #Test"
+        -d text="<b>• R •</b>%0ABuild started on <code>Circle CI/CD</code>%0A <b>For device</b> <i>Xiaomi Poco X2/Redmi K30 (phoenix)</i>%0A<b>branch:-</b> <code>$(git rev-parse --abbrev-ref HEAD)</code>(master)%0A<b>Under commit</b> <code>$(git log --pretty=format:'"%h : %s"' -1)</code>%0A<b>Using compiler:- </b> <code>$CLANG_VERSION</code>%0A<b>Started on:- </b> <code>$(date)</code>%0A<b>Build Status:</b> #Test"
 }
 # Push kernel to channel
 
@@ -43,7 +44,7 @@ function push() {
         -F chat_id="$chat_id" \
         -F "disable_web_page_preview=true" \
         -F "parse_mode=html" \
-        -F caption="{Q} Build took $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) second(s). | For <b>Xiaomi Poco X2/Redmi K30 {Q - Q} (phoenix)</b> | <b>$CLANG_VERSION</b>"
+        -F caption="{R} Build took $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) second(s). | For <b>Xiaomi Poco X2/Redmi K30 {Q - Q} (phoenix)</b> | <b>$CLANG_VERSION</b>"
 }
 # Fin Error
 
@@ -52,7 +53,7 @@ function finerr() {
         -d chat_id="$chat_id" \
         -d "disable_web_page_preview=true" \
         -d "parse_mode=markdown" \
-        -d text="Build throw an error(s)"
+        -d text="Build throw an error(s) RIP"
     exit 1
 }
 echo "building!"
@@ -71,18 +72,17 @@ function compile() {
                       STRIP=llvm-strip
 ls out/arch/arm64/boot/
 
-if [ `ls "$IMAGE" 2>/dev/null | wc -l` != "0" ]
-then
-   cp out/arch/arm64/boot/Image.gz-dtb AnyKernel
+if [[ -f ${IMAGE} &&  ${DTBO} ]]; then
+     mv -f $IMAGE ${DTBO} AnyKernel
 else
-   finerr
+     finerr
 fi
 }
 # Zipping
 
 function zipping() {
     cd AnyKernel || exit 1
-    zip -r9 DartKernel-phoenix-${TANGGAL}.zip *
+    zip -r9 Ca5-R.zip *
     cd ..
 }
 sendinfo
