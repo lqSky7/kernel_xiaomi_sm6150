@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2021, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
  * Copyright (C) 2021 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -42,10 +42,12 @@
 #include <dsp/audio_cal_utils.h>
 #include <dsp/apr_elliptic.h>
 #include <elliptic/elliptic_mixer_controls.h>
+/* for mius start */
 #ifdef CONFIG_US_PROXIMITY
 #include <dsp/apr_mius.h>
 #include <mius/mius_mixer_controls.h>
 #endif
+/* for mius end */
 
 #include "msm-pcm-routing-v2.h"
 #include "msm-pcm-routing-devdep.h"
@@ -97,7 +99,7 @@ static bool is_ds2_on;
 static bool swap_ch;
 static bool hifi_filter_enabled;
 static int aanc_level;
-static int num_app_cfg_types;
+
 #define WEIGHT_0_DB 0x4000
 /* all the FEs which can support channel mixer */
 static struct msm_pcm_channel_mixer channel_mixer[MSM_FRONTEND_DAI_MM_SIZE];
@@ -3865,7 +3867,6 @@ static int msm_routing_ec_ref_rx_put(struct snd_kcontrol *kcontrol,
 	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
 	struct snd_soc_dapm_update *update = NULL;
 	bool state = true;
-
 
 	mutex_lock(&routing_lock);
 	switch (ucontrol->value.integer.value[0]) {
@@ -17287,9 +17288,9 @@ static int msm_routing_put_app_type_cfg_control(struct snd_kcontrol *kcontrol,
 
 	memset(app_type_cfg, 0, MAX_APP_TYPES*
 				sizeof(struct msm_pcm_routing_app_type_data));
-	if (num_app_types > MAX_APP_TYPES || num_app_types < 0) {
-		pr_err("%s: number of app types %d is invalid\n",
-			__func__, num_app_types) ;
+	if (num_app_types > MAX_APP_TYPES) {
+		pr_err("%s: number of app types exceed the max supported\n",
+			__func__);
 		return -EINVAL;
 	}
 	for (j = 0; j < num_app_types; j++) {
@@ -17462,25 +17463,6 @@ static int msm_routing_get_lsm_app_type_cfg_control(
 					struct snd_kcontrol *kcontrol,
 					struct snd_ctl_elem_value *ucontrol)
 {
-	int shift = ((struct soc_multi_mixer_control *)
-				kcontrol->private_value)->shift;
-	int i = 0, j = 0;
-
-	mutex_lock(&routing_lock);
-	ucontrol->value.integer.value[i] = num_app_cfg_types;
-
-	for (j = 0; j < num_app_cfg_types; ++j) {
-		ucontrol->value.integer.value[++i] =
-				lsm_app_type_cfg[j].app_type;
-		ucontrol->value.integer.value[++i] =
-				lsm_app_type_cfg[j].sample_rate;
-		ucontrol->value.integer.value[++i] =
-				lsm_app_type_cfg[j].bit_width;
-		if (shift == 1)
-			ucontrol->value.integer.value[++i] =
-				lsm_app_type_cfg[j].num_out_channels;
-	}
-	mutex_unlock(&routing_lock);
 	return 0;
 }
 
@@ -17493,12 +17475,9 @@ static int msm_routing_put_lsm_app_type_cfg_control(
 	int i = 0, j;
 	int num_app_types;
 
-	mutex_lock(&routing_lock);
-	if (ucontrol->value.integer.value[0] < 0 ||
-		ucontrol->value.integer.value[0] > MAX_APP_TYPES) {
-		pr_err("%s: number of app types %ld is invalid\n",
-			__func__, ucontrol->value.integer.value[0]);
-		mutex_unlock(&routing_lock);
+	if (ucontrol->value.integer.value[0] > MAX_APP_TYPES) {
+		pr_err("%s: number of app types exceed the max supported\n",
+			__func__);
 		return -EINVAL;
 	}
 
@@ -17518,7 +17497,7 @@ static int msm_routing_put_lsm_app_type_cfg_control(
 			lsm_app_type_cfg[j].num_out_channels =
 				ucontrol->value.integer.value[i++];
 	}
-	mutex_unlock(&routing_lock);
+
 	return 0;
 }
 
@@ -18246,6 +18225,7 @@ static const char * const mi2s_rx_vi_fb_tx_mux_text[] = {
 	"ZERO", "SENARY_TX"
 #endif
 };
+
 
 static const char * const int4_mi2s_rx_vi_fb_tx_mono_mux_text[] = {
 	"ZERO", "INT5_MI2S_TX"
@@ -19736,6 +19716,7 @@ static const struct snd_soc_dapm_widget msm_qdsp6_widgets[] = {
 	SND_SOC_DAPM_MUX("PRI_MI2S_RX_VI_FB_MUX", SND_SOC_NOPM, 0, 0,
 #endif
 				&mi2s_rx_vi_fb_mux),
+
 	SND_SOC_DAPM_MUX("INT4_MI2S_RX_VI_FB_MONO_CH_MUX", SND_SOC_NOPM, 0, 0,
 				&int4_mi2s_rx_vi_fb_mono_ch_mux),
 	SND_SOC_DAPM_MUX("INT4_MI2S_RX_VI_FB_STEREO_CH_MUX", SND_SOC_NOPM, 0, 0,
@@ -23165,6 +23146,7 @@ static const struct snd_soc_dapm_route intercon[] = {
 #else
 	{"PRI_MI2S_RX_VI_FB_MUX", "SENARY_TX", "SENARY_TX"},
 #endif
+
 	{"INT4_MI2S_RX_VI_FB_MONO_CH_MUX", "INT5_MI2S_TX", "INT5_MI2S_TX"},
 	{"INT4_MI2S_RX_VI_FB_STEREO_CH_MUX", "INT5_MI2S_TX", "INT5_MI2S_TX"},
 	{"SLIMBUS_0_RX", NULL, "SLIM0_RX_VI_FB_LCH_MUX"},
@@ -23176,6 +23158,8 @@ static const struct snd_soc_dapm_route intercon[] = {
 #else
 	{"PRI_MI2S_RX", NULL, "PRI_MI2S_RX_VI_FB_MUX"},
 #endif
+
+
 	{"INT4_MI2S_RX", NULL, "INT4_MI2S_RX_VI_FB_MONO_CH_MUX"},
 	{"INT4_MI2S_RX", NULL, "INT4_MI2S_RX_VI_FB_STEREO_CH_MUX"},
 	{"PRI_TDM_TX_0", NULL, "BE_IN"},
@@ -24055,15 +24039,19 @@ static int msm_routing_probe(struct snd_soc_platform *platform)
 	snd_soc_add_platform_controls(
 			platform, msm_routing_feature_support_mixer_controls,
 			ARRAY_SIZE(msm_routing_feature_support_mixer_controls));
+	/* for mius start */
 #ifdef CONFIG_US_PROXIMITY
 	mius_add_platform_controls(platform);
 #endif
+	/* for mius end */
 	snd_soc_add_platform_controls(platform,
 			port_multi_channel_map_mixer_controls,
 			ARRAY_SIZE(port_multi_channel_map_mixer_controls));
 
+#ifdef SMART_AMP
+	msm_smartamp_add_controls(platform);
+#endif
 	elliptic_add_platform_controls(platform);
-
 	return 0;
 }
 

@@ -3542,7 +3542,7 @@ static int tfa98xx_read_memtrack_data(struct tfa98xx *tfa98xx, int *pLivedata)
 
 	enum TFA_DEVICE_TYPE pri_devcie = TFA_DEVICE_TYPE_MAX;
 	enum TFA_DEVICE_TYPE sec_devcie = TFA_DEVICE_TYPE_MAX;
-	/* TFA device memory map. */
+	/* TFA device memory map. */        
 	struct livedata_cfg livedata_table[TFA_DEVICE_TYPE_MAX][MEMTRACK_ITEM_MAX] = {
 		/* for TFA9894 device */
 		{
@@ -3657,7 +3657,7 @@ static int tfa98xx_read_memtrack_data(struct tfa98xx *tfa98xx, int *pLivedata)
 			} else {
 				ret = tfa_dsp_cmd_id_write_read(tfa98xx->tfa, MODULE_FRAMEWORK, FW_PAR_ID_GET_MEMTRACK, item_bytes+3, buffer);
 			}
-
+			
 			pr_info("read memtrack data. ret=%d\n", ret);
 
 			if (Tfa98xx_Error_Ok == ret) {
@@ -3824,16 +3824,16 @@ static const struct tfa98xx_miscdevice_info miscdevice_info[MISC_DEVICE_MAX] = {
 		.operations.owner = THIS_MODULE,
 		.operations.open = tfa98xx_misc_device_control_open,
 		.operations.unlocked_ioctl = tfa98xx_misc_device_control_ioctl,
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_COMPAT		
 		.operations.compat_ioctl = tfa98xx_misc_device_control_compat_ioctl,
-#endif
+#endif		
 	},
 };
 
 int tfa98xx_init_misc_device(struct tfa98xx *tfa98xx)
 {
 	int ret = 0;
-
+		
 	pr_info("entry\n");
 	if (NULL == tfa98xx) {
 		pr_err("tfa98xx is NULL.\n");
@@ -3858,7 +3858,7 @@ int tfa98xx_init_misc_device(struct tfa98xx *tfa98xx)
 	if (ret) {
 		pr_err("tfa98xx_init_misc_device: register misc device [%s] failed\n", tfa98xx->tfa98xx_rw.name);
 	}
-
+	
 	/* create device node "tfa_rpc_X" for switching profile. */
 	tfa98xx->tfa98xx_rpc.minor = MISC_DYNAMIC_MINOR;
 	tfa98xx->tfa98xx_rpc.name = miscdevice_info[MISC_DEVICE_TFA98XX_RPC].devicename;
@@ -3903,7 +3903,7 @@ void tfa98xx_remove_misc_device(struct tfa98xx *tfa98xx)
 	misc_deregister(&tfa98xx->tfa98xx_rw);
 	misc_deregister(&tfa98xx->tfa98xx_rpc);
 	misc_deregister(&tfa98xx->tfa98xx_profile);
-	misc_deregister(&tfa98xx->tfa98xx_control);
+	misc_deregister(&tfa98xx->tfa98xx_control);	
 	return;
 }
 
@@ -4256,3 +4256,4 @@ module_exit(tfa98xx_i2c_exit);
 
 MODULE_DESCRIPTION("ASoC TFA98XX driver");
 MODULE_LICENSE("GPL");
+

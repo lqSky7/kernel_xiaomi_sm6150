@@ -1,5 +1,5 @@
 /** Filename: Tfa9872_TfaFieldnames.h
- *  This file was generated automatically on 10/11/16 at 10:19:27.
+ *  This file was generated automatically on 10/11/16 at 10:19:27. 
  *  Source file: TFA9872N1B2_DefaultI2CSettings -v16.xlsx
  */
 

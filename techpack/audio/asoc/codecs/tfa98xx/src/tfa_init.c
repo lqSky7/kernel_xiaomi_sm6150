@@ -157,12 +157,12 @@ static int tfa_get_swvstep(struct tfa_device *tfa)
 }
 
 static int tfa_get_mtpb(struct tfa_device *tfa) {
-
+	
 	int value=0;
 
 	/* Set the new value in the hw register */
 	value = TFA_GET_BF(tfa, MTPB);
-
+	
 	return value;
 }
 
@@ -741,7 +741,7 @@ static enum Tfa98xx_Error tfa9874_specific(struct tfa_device *tfa)
 	switch (tfa->rev) {
 		case 0x0a74: /* Initial revision ID */
 			/* ----- generated code start ----- */
-			/* V25 */
+			/* V25 */            
 			reg_write(tfa, 0x02, 0x22a8); //POR=0x25c8
 			reg_write(tfa, 0x51, 0x0020); //POR=0x0000
 			reg_write(tfa, 0x52, 0x57dc); //POR=0x56dc
@@ -1103,7 +1103,7 @@ static enum Tfa98xx_Error tfa9896_specific(struct tfa_device *tfa)
 		reg_write(tfa, 0x48, 0x0300); //POR=0x0308
 		reg_write(tfa, 0x88, 0x0100); //POR=0x0000
 		/* ----- generated code end   ----- */
-	}
+	}						  
 	else if (tfa->rev == 0x3b96) {
 		/* ----- generated code start ----- v1*/
 		reg_write(tfa, 0x06, 0x000b); //POR=0x0001
@@ -1112,7 +1112,7 @@ static enum Tfa98xx_Error tfa9896_specific(struct tfa_device *tfa)
 		reg_write(tfa, 0x48, 0x0300); //POR=0x0308
 		reg_write(tfa, 0x88, 0x0100); //POR=0x0000
 		/* ----- generated code end   ----- */
-	}
+	}	
 	/* $49:[0] - 1 ==> 0; CLIP - default value changed. 0 means CLIPPER on */
 	error = reg_read(tfa, 0x49, &check_value);
 	check_value &= ~0x1;
@@ -1572,7 +1572,7 @@ static enum Tfa98xx_Error tfa9894_set_osc_powerdown(struct tfa_device *tfa, int 
 	}
 
 	return Tfa98xx_Error_Bad_Parameter;
-}
+} 
 
 static enum Tfa98xx_Error tfa9894_faim_protect(struct tfa_device *tfa, int status)
 {

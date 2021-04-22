@@ -1,5 +1,5 @@
 /** Filename: tfa9894_tfaFieldnames.h
- *  This file was generated automatically on 09/06/17 at 14:51:37.
+ *  This file was generated automatically on 09/06/17 at 14:51:37. 
  *  Source file: TFA9894_N1A1_I2C_RegisterMap.xlsx
  */
 
