@@ -2,7 +2,7 @@
 
 echo "Kanging shits"
 
-git clone --depth=1 https://github.com/Catinice/kernel_xiaomi_phoenix -b rs kernel
+git clone --depth=1 https://github.com/Ca5-n/kernel_xiaomi_phoenix -b rs kernel
 cd kernel
 git clone --depth=1 https://github.com/kdrag0n/proton-clang clang
 
