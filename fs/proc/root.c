@@ -167,7 +167,8 @@ static struct file_system_type proc_fs_type = {
 
 void __init proc_root_init(void)
 {
-	proc_init_inodecache();
+
+	proc_init_kmemcache();
 	set_proc_pid_nlink();
 	proc_self_init();
 	proc_thread_self_init();
@@ -175,9 +176,6 @@ void __init proc_root_init(void)
 
 	proc_net_init();
 	proc_uid_init();
-#ifdef CONFIG_SYSVIPC
-	proc_mkdir("sysvipc", NULL);
-#endif
 	proc_mkdir("fs", NULL);
 	proc_mkdir("driver", NULL);
 	proc_create_mount_point("fs/nfsd"); /* somewhere for the nfsd filesystem to be mounted */
