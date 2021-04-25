@@ -23,7 +23,6 @@
 #include <linux/cpufreq.h>
 #include <linux/list_sort.h>
 #include <linux/jiffies.h>
-#include <linux/sched/core_ctl.h>
 #include <linux/sched/stat.h>
 #include <trace/events/sched.h>
 #include "sched.h"
@@ -124,9 +123,6 @@ static void release_rq_locks_irqrestore(const cpumask_t *cpus,
 
 /* Max window size (in ns) = 1s */
 #define MAX_SCHED_RAVG_WINDOW 1000000000
-
-/* 1 -> use PELT based load stats, 0 -> use window-based load stats */
-unsigned int __read_mostly walt_disabled = 0;
 
 __read_mostly unsigned int sysctl_sched_cpu_high_irqload = (10 * NSEC_PER_MSEC);
 
@@ -2154,9 +2150,6 @@ static struct sched_cluster *alloc_new_cluster(const struct cpumask *cpus)
 	cluster->max_mitigated_freq	=	UINT_MAX;
 	cluster->min_freq		=	1;
 	cluster->max_possible_freq	=	1;
-	cluster->dstate			=	0;
-	cluster->dstate_wakeup_energy	=	0;
-	cluster->dstate_wakeup_latency	=	0;
 	cluster->freq_init_done		=	false;
 
 	raw_spin_lock_init(&cluster->load_lock);
@@ -2168,7 +2161,6 @@ static struct sched_cluster *alloc_new_cluster(const struct cpumask *cpus)
 	if (cluster->efficiency < min_possible_efficiency)
 		min_possible_efficiency = cluster->efficiency;
 
-	cluster->notifier_sent = 0;
 	return cluster;
 }
 
@@ -2340,12 +2332,7 @@ struct sched_cluster init_cluster = {
 	.max_mitigated_freq	=	UINT_MAX,
 	.min_freq		=	1,
 	.max_possible_freq	=	1,
-	.dstate			=	0,
-	.dstate_wakeup_energy	=	0,
-	.dstate_wakeup_latency	=	0,
 	.exec_scale_factor	=	1024,
-	.notifier_sent		=	0,
-	.wake_up_idle		=	0,
 	.aggr_grp_load		=	0,
 	.coloc_boost_load	=	0,
 };
@@ -2664,8 +2651,6 @@ int update_preferred_cluster(struct related_thread_group *grp,
 
 	return 0;
 }
-
-DEFINE_MUTEX(policy_mutex);
 
 #define pct_to_real(tunable)	\
 		(div64_u64((u64)tunable * (u64)max_task_load(), 100))
@@ -3270,20 +3255,22 @@ void walt_rotation_checkpoint(int nr_big)
 	walt_rotation_enabled = nr_big >= num_possible_cpus();
 }
 
-unsigned int walt_get_default_coloc_group_load(void)
+void walt_fill_ta_data(struct core_ctl_notif_data *data)
 {
 	struct related_thread_group *grp;
 	unsigned long flags;
 	u64 total_demand = 0, wallclock;
 	struct task_struct *p;
 	int min_cap_cpu, scale = 1024;
+	struct sched_cluster *cluster;
+	int i = 0;
 
 	grp = lookup_related_thread_group(DEFAULT_CGROUP_COLOC_ID);
 
 	raw_spin_lock_irqsave(&grp->lock, flags);
 	if (list_empty(&grp->tasks)) {
 		raw_spin_unlock_irqrestore(&grp->lock, flags);
-		return 0;
+		goto fill_util;
 	}
 
 	wallclock = sched_ktime_clock();
@@ -3309,8 +3296,24 @@ unsigned int walt_get_default_coloc_group_load(void)
 	if (min_cap_cpu != -1)
 		scale = arch_scale_cpu_capacity(NULL, min_cap_cpu);
 
-	return div64_u64(total_demand * 1024 * 100,
-			(u64)sched_ravg_window * scale);
+	data->coloc_load_pct = div64_u64(total_demand * 1024 * 100,
+			       (u64)sched_ravg_window * scale);
+
+fill_util:
+	for_each_sched_cluster(cluster) {
+		int fcpu = cluster_first_cpu(cluster);
+
+		if (i == MAX_CLUSTERS)
+			break;
+
+		scale = arch_scale_cpu_capacity(NULL, fcpu);
+		data->ta_util_pct[i] = div64_u64(cluster->aggr_grp_load * 1024 *
+				       100, (u64)sched_ravg_window * scale);
+
+		scale = arch_scale_freq_capacity(NULL, fcpu);
+		data->cur_cap_pct[i] = (scale * 100)/1024;
+		i++;
+	}
 }
 
 int walt_proc_update_handler(struct ctl_table *table, int write,

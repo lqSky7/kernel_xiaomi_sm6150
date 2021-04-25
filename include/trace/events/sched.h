@@ -862,10 +862,7 @@ struct cfs_rq *__trace_sched_group_cfs_rq(struct sched_entity *se)
 #endif /* CREATE_TRACE_POINTS */
 
 #ifdef CONFIG_SCHED_WALT
-extern unsigned int sysctl_sched_use_walt_cpu_util;
-extern unsigned int sysctl_sched_use_walt_task_util;
 extern unsigned int sched_ravg_window;
-extern unsigned int walt_disabled;
 
 #define walt_util(util_var, demand_sum) {\
 	u64 sum = demand_sum << SCHED_CAPACITY_SHIFT;\
@@ -905,7 +902,6 @@ TRACE_EVENT(sched_load_cfs_rq,
 		if (&cfs_rq->rq->cfs == cfs_rq) {
 			walt_util(__entry->util_walt,
 				  cfs_rq->rq->prev_runnable_sum);
-			if (!walt_disabled && sysctl_sched_use_walt_cpu_util)
 				__entry->util = __entry->util_walt;
 		}
 #endif
@@ -958,8 +954,6 @@ TRACE_EVENT(sched_load_se,
 		__field(	pid_t,		pid			      )
 		__field(	unsigned long,	load			      )
 		__field(	unsigned long,	util			      )
-		__field(	unsigned long,	util_pelt		      )
-		__field(	u32,		util_walt		      )
 	),
 
 	TP_fast_assign(
@@ -975,22 +969,11 @@ TRACE_EVENT(sched_load_se,
 		__entry->pid = p ? p->pid : -1;
 		__entry->load = se->avg.load_avg;
 		__entry->util = se->avg.util_avg;
-		__entry->util_pelt  = __entry->util;
-		__entry->util_walt  = 0;
-#ifdef CONFIG_SCHED_WALT
-		if (!se->my_q) {
-			struct task_struct *p = container_of(se, struct task_struct, se);
-			__entry->util_walt = p->ravg.demand / (sched_ravg_window >> SCHED_CAPACITY_SHIFT);
-			if (!walt_disabled && sysctl_sched_use_walt_task_util)
-				__entry->util = __entry->util_walt;
-		}
-#endif
 	),
 
 	TP_printk("cpu=%d path=%s comm=%s pid=%d load=%lu util=%lu util_pelt=%lu util_walt=%u",
 		  __entry->cpu, __get_str(path), __entry->comm,
-		  __entry->pid, __entry->load, __entry->util,
-		  __entry->util_pelt, __entry->util_walt)
+		  __entry->pid, __entry->load, __entry->util)
 );
 
 /*
@@ -1137,6 +1120,33 @@ TRACE_EVENT(core_ctl_update_nr_need,
 	TP_printk("cpu=%d nr_need=%d prev_misfit_need=%d nrrun=%d max_nr=%d nr_prev_assist=%d",
 		__entry->cpu, __entry->nr_need, __entry->prev_misfit_need,
 		__entry->nrrun, __entry->max_nr, __entry->nr_prev_assist)
+);
+
+TRACE_EVENT(core_ctl_notif_data,
+
+	TP_PROTO(u32 nr_big, u32 ta_load, u32 *ta_util, u32 *cur_cap),
+
+	TP_ARGS(nr_big, ta_load, ta_util, cur_cap),
+
+	TP_STRUCT__entry(
+		__field(u32, nr_big)
+		__field(u32, ta_load)
+		__array(u32, ta_util, MAX_CLUSTERS)
+		__array(u32, cur_cap, MAX_CLUSTERS)
+	),
+
+	TP_fast_assign(
+		__entry->nr_big = nr_big;
+		__entry->ta_load = ta_load;
+		memcpy(__entry->ta_util, ta_util, MAX_CLUSTERS * sizeof(u32));
+		memcpy(__entry->cur_cap, cur_cap, MAX_CLUSTERS * sizeof(u32));
+	),
+
+	TP_printk("nr_big=%u ta_load=%u ta_util=(%u %u %u) cur_cap=(%u %u %u)",
+		  __entry->nr_big, __entry->ta_load,
+		  __entry->ta_util[0], __entry->ta_util[1],
+		  __entry->ta_util[2], __entry->cur_cap[0],
+		  __entry->cur_cap[1], __entry->cur_cap[2])
 );
 
 /*
@@ -1476,6 +1486,7 @@ TRACE_EVENT(sched_task_util,
 		__field(int, rtg_cpu			)
 		__field(u64, latency			)
 		__field(bool, stune_boosted		)
+		__field(bool, is_rtg			)
 	),
 
 	TP_fast_assign(
@@ -1493,14 +1504,15 @@ TRACE_EVENT(sched_task_util,
 		__entry->rtg_cpu		= rtg_cpu;
 		__entry->latency		= (sched_clock() - start_t);
 		__entry->stune_boosted		= stune_boosted;
+		__entry->is_rtg			= task_in_related_thread_group(p);
 	),
 
-	TP_printk("pid=%d comm=%s util=%lu prev_cpu=%d next_cpu=%d backup_cpu=%d target_cpu=%d sync=%d need_idle=%d fastpath=%d placement_boost=%d rtg_cpu=%d latency=%llu stune_boosted=%d",
+	TP_printk("pid=%d comm=%s util=%lu prev_cpu=%d next_cpu=%d backup_cpu=%d target_cpu=%d sync=%d need_idle=%d fastpath=%d placement_boost=%d rtg_cpu=%d latency=%llu stune_boosted=%d is_rtg=%d",
 		__entry->pid, __entry->comm, __entry->util, __entry->prev_cpu,
 		__entry->next_cpu, __entry->backup_cpu, __entry->target_cpu,
 		__entry->sync, __entry->need_idle, __entry->fastpath,
 		__entry->placement_boost, __entry->rtg_cpu, __entry->latency,
-		__entry->stune_boosted)
+		__entry->stune_boosted, __entry->is_rtg)
 )
 
 /*
@@ -1508,15 +1520,16 @@ TRACE_EVENT(sched_task_util,
  */
 TRACE_EVENT(sched_get_nr_running_avg,
 
-	TP_PROTO(int cpu, int nr, int nr_misfit, int nr_max),
+	TP_PROTO(int cpu, int nr, int nr_misfit, int nr_max, int nr_scaled),
 
-	TP_ARGS(cpu, nr, nr_misfit, nr_max),
+	TP_ARGS(cpu, nr, nr_misfit, nr_max, nr_scaled),
 
 	TP_STRUCT__entry(
 		__field( int, cpu)
 		__field( int, nr)
 		__field( int, nr_misfit)
 		__field( int, nr_max)
+		__field( int, nr_scaled)
 	),
 
 	TP_fast_assign(
@@ -1524,10 +1537,12 @@ TRACE_EVENT(sched_get_nr_running_avg,
 		__entry->nr = nr;
 		__entry->nr_misfit = nr_misfit;
 		__entry->nr_max = nr_max;
+		__entry->nr_scaled = nr_scaled;
 	),
 
-	TP_printk("cpu=%d nr=%d nr_misfit=%d nr_max=%d",
-		__entry->cpu, __entry->nr, __entry->nr_misfit, __entry->nr_max)
+	TP_printk("cpu=%d nr=%d nr_misfit=%d nr_max=%d nr_scaled=%d",
+		__entry->cpu, __entry->nr, __entry->nr_misfit, __entry->nr_max,
+		__entry->nr_scaled)
 );
 
 /*

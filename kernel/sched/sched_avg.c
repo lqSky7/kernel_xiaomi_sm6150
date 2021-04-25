@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, 2015-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012, 2015-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -84,9 +84,11 @@ void sched_get_nr_running_avg(struct sched_avg_stats *stats)
 		stats[cpu].nr_misfit = (int)div64_u64((tmp_misfit +
 						NR_THRESHOLD_PCT), 100);
 		stats[cpu].nr_max = per_cpu(nr_max, cpu);
+		stats[cpu].nr_scaled = tmp_nr;
 
 		trace_sched_get_nr_running_avg(cpu, stats[cpu].nr,
-				stats[cpu].nr_misfit, stats[cpu].nr_max);
+				stats[cpu].nr_misfit, stats[cpu].nr_max,
+				stats[cpu].nr_scaled);
 
 		per_cpu(last_time, cpu) = curr_time;
 		per_cpu(nr_prod_sum, cpu) = 0;
@@ -177,11 +179,8 @@ unsigned int sched_get_cpu_util(int cpu)
 	capacity = capacity_orig_of(cpu);
 
 #ifdef CONFIG_SCHED_WALT
-	if (!walt_disabled && sysctl_sched_use_walt_cpu_util) {
-		util = rq->prev_runnable_sum + rq->grp_time.prev_runnable_sum;
-		util = div64_u64(util,
-				 sched_ravg_window >> SCHED_CAPACITY_SHIFT);
-	}
+	util = rq->prev_runnable_sum + rq->grp_time.prev_runnable_sum;
+	util = div64_u64(util, sched_ravg_window >> SCHED_CAPACITY_SHIFT);
 #endif
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
 
