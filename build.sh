@@ -2,7 +2,7 @@
 
 echo "Kanging shits"
 
-git clone --depth=1 https://github.com/Ca5-n/kernel_xiaomi_phoenix -b rs kernel
+git clone --depth=1 https://github.com/Catinice/kernel_xiaomi_sm6150 -b rs kernel
 cd kernel
 git clone --depth=1 https://github.com/kdrag0n/proton-clang clang
 
@@ -17,8 +17,8 @@ export CONFIG_PATH=$PWD/arch/arm64/configs/phoenix_defconfig
 export PATH=$PWD/clang/bin:$PATH
 
 export ARCH=arm64
-export KBUILD_BUILD_HOST=cato
-export KBUILD_BUILD_USER="Ca5"
+export KBUILD_BUILD_HOST=ca5_n
+export KBUILD_BUILD_USER="kurwa"
 
 # Send sticker
 
@@ -82,7 +82,7 @@ fi
 
 function zipping() {
     cd AnyKernel || exit 1
-    zip -r9 Ca5-R.zip *
+    zip -r9 Ca5-R-stable-V1-cyka-Tbl.zip *
     cd ..
 }
 sendinfo

@@ -16,6 +16,6 @@ steps:
       - git config --global color.ui false
       - git clone https://github.com/akhilnarang/scripts && cd scripts && bash setup/android_build_env.sh && cd ..
       - mkdir d && cd d
-      - wget https://raw.githubusercontent.com/Ca5-n/kernel_xiaomi_phoenix/rs/build.sh
+      - wget https://raw.githubusercontent.com/Catinice/kernel_xiaomi_sm6150/rs/build.sh
       - bash build.sh
      
