@@ -73,6 +73,7 @@ ls out/arch/arm64/boot/
 if [ `ls "$IMAGE" 2>/dev/null | wc -l` != "0" ]
 then
     cp out/arch/arm64/boot/Image.gz-dtb AnyKernel
+    cp out/arch/arm64/boot/dtbo.img AnyKernel
 else
      finerr
 fi
