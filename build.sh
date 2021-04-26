@@ -8,8 +8,7 @@ git clone --depth=1 https://github.com/kdrag0n/proton-clang clang
 
 echo "Kanged!"
 
-IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz
-DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
+IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 TANGGAL=$(date +"%F-%S")
 START=$(date +"%s")
 CLANG_VERSION=$(clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
@@ -71,9 +70,9 @@ function compile() {
                       OBJDUMP=llvm-objdump \
                       STRIP=llvm-strip
 ls out/arch/arm64/boot/
-
-if [[ -f ${IMAGE} &&  ${DTBO} ]]; then
-     mv -f $IMAGE ${DTBO} AnyKernel
+if [ `ls "$IMAGE" 2>/dev/null | wc -l` != "0" ]
+then
+    cp out/arch/arm64/boot/Image.gz-dtb AnyKernel
 else
      finerr
 fi
@@ -82,7 +81,7 @@ fi
 
 function zipping() {
     cd AnyKernel || exit 1
-    zip -r9 Ca5-R-stable-V1-cyka-Tbl.zip *
+    zip -r9 Ca5-R-stable-V1-cyka-Tbl-dtb.zip *
     cd ..
 }
 sendinfo
