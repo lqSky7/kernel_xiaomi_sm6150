@@ -2,7 +2,7 @@
 
 echo "Kanging shits"
 
-git clone --depth=1 https://github.com/Catinice/kernel_xiaomi_sm6150 -b rs kernel
+git clone --depth=1 https://github.com/Catinice/kernel_xiaomi_sm6150 -b rmiui kernel
 cd kernel
 git clone --depth=1 https://github.com/kdrag0n/proton-clang clang
 
@@ -44,7 +44,7 @@ function push() {
         -F chat_id="$chat_id" \
         -F "disable_web_page_preview=true" \
         -F "parse_mode=html" \
-        -F caption="{R - PREBUILT - MIUI } Build took $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) second(s). | For <b>Xiaomi Poco X2/Redmi K30 {Q - Q} (phoenix)</b> | <b>$CLANG_VERSION</b>"
+        -F caption="{MEME} Build took $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) second(s). | For <b>Xiaomi Poco X2/Redmi K30 {Q - Q} (phoenix)</b> | <b>$CLANG_VERSION</b>"
 }
 # Fin Error
 
