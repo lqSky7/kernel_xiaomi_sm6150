@@ -3269,6 +3269,21 @@ struct preempt_store {
 };
 
 DEFINE_PER_CPU(struct preempt_store, the_ps);
+
+/*
+ * This is only called from __schedule() upon context switch.
+ *
+ * schedule() calls __schedule() with preemption disabled.
+ * if we had entered idle and exiting idle now, reset the preemption
+ * tracking otherwise we may think preemption is disabled the whole time
+ * when the non idle task re-enables the preemption in schedule().
+ */
+static inline void preempt_latency_reset(void)
+{
+	if (is_idle_task(this_rq()->curr))
+		this_cpu_ptr(&the_ps)->ts = 0;
+}
+
 /*
  * If the value passed in is equal to the current preempt count
  * then we just disabled preemption. Start timing the latency.
@@ -3324,7 +3339,7 @@ static inline void preempt_latency_stop(int val)
 	if (preempt_count() == val) {
 		struct preempt_store *ps = &per_cpu(the_ps,
 				raw_smp_processor_id());
-		u64 delta = sched_clock() - ps->ts;
+		u64 delta = ps->ts ? (sched_clock() - ps->ts) : 0;
 
 		/*
 		 * Trace preempt disable stack if preemption
@@ -3363,6 +3378,7 @@ NOKPROBE_SYMBOL(preempt_count_sub);
 #else
 static inline void preempt_latency_start(int val) { }
 static inline void preempt_latency_stop(int val) { }
+static inline void preempt_latency_reset(void) { }
 #endif
 
 static inline unsigned long get_preempt_disable_ip(struct task_struct *p)
@@ -3583,6 +3599,7 @@ static void __sched notrace __schedule(bool preempt)
 		if (!prev->on_rq)
 			prev->last_sleep_ts = wallclock;
 
+		preempt_latency_reset();
 		update_task_ravg(prev, rq, PUT_PREV_TASK, wallclock, 0);
 		update_task_ravg(next, rq, PICK_NEXT_TASK, wallclock, 0);
 		rq->nr_switches++;
@@ -3958,7 +3975,8 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
 	 */
 	if (dl_prio(prio)) {
 		if (!dl_prio(p->normal_prio) ||
-		    (pi_task && dl_entity_preempt(&pi_task->dl, &p->dl))) {
+		    (pi_task && dl_prio(pi_task->prio) &&
+		     dl_entity_preempt(&pi_task->dl, &p->dl))) {
 			p->dl.dl_boosted = 1;
 			queue_flag |= ENQUEUE_REPLENISH;
 		} else
@@ -7200,6 +7218,8 @@ static DEFINE_MUTEX(cfs_constraints_mutex);
 
 const u64 max_cfs_quota_period = 1 * NSEC_PER_SEC; /* 1s */
 const u64 min_cfs_quota_period = 1 * NSEC_PER_MSEC; /* 1ms */
+/* More than 203 days if BW_SHIFT equals 20. */
+static const u64 max_cfs_runtime = MAX_BW * NSEC_PER_USEC;
 
 static int __cfs_schedulable(struct task_group *tg, u64 period, u64 runtime);
 
@@ -7225,6 +7245,12 @@ static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
 	 * feasibility.
 	 */
 	if (period > max_cfs_quota_period)
+		return -EINVAL;
+
+	/*
+	 * Bound quota to defend quota against overflow during bandwidth shift.
+	 */
+	if (quota != RUNTIME_INF && quota > max_cfs_runtime)
 		return -EINVAL;
 
 	/*

@@ -1336,7 +1336,7 @@ struct sched_group {
 	 * by attaching extra space to the end of the structure,
 	 * depending on how many CPUs the kernel has booted up with)
 	 */
-	unsigned long cpumask[0];
+	unsigned long cpumask[];
 };
 
 static inline struct cpumask *sched_group_span(struct sched_group *sg)
@@ -1829,6 +1829,8 @@ extern void init_dl_rq_bw_ratio(struct dl_rq *dl_rq);
 #define BW_SHIFT	20
 #define BW_UNIT		(1 << BW_SHIFT)
 #define RATIO_SHIFT	8
+#define MAX_BW_BITS	(64 - BW_SHIFT)
+#define MAX_BW		((1ULL << MAX_BW_BITS) - 1)
 unsigned long to_ratio(u64 period, u64 runtime);
 
 extern void init_entity_runnable_average(struct sched_entity *se);
