@@ -115,7 +115,6 @@ ifdef CONFIG_SND_SOC_MSM_QDSP6V2_INTF
 	Q6_OBJS += elliptic/io_modules/userspace/elliptic_data_userspace_io.o
 	Q6_OBJS += elliptic/io_modules/userspace/elliptic_data_userspace_ctrl.o
 
-# for mius start
 ifdef CONFIG_US_PROXIMITY
 	Q6_OBJS += apr_mius.o
 	Q6_OBJS += mius/mius.o
@@ -125,7 +124,6 @@ ifdef CONFIG_US_PROXIMITY
 	Q6_OBJS += mius/io_modules/userspace/mius_data_userspace_io.o
 	Q6_OBJS += mius/io_modules/userspace/mius_data_userspace_ctrl.o
 endif
-# for mius end
 
 endif
 
@@ -183,7 +181,10 @@ CDEFINES +=	-DANI_LITTLE_BYTE_ENDIAN \
 		-Werror\
 		-D__linux__
 
-CDEFINES += -DCONFIG_SND_SOC_TFA9874_FOR_DAVI
+ifdef CONFIG_MACH_XIAOMI_SDMMAGPIE
+	CDEFINES += -DCONFIG_SND_SOC_TFA9874_FOR_DAVI
+endif
+
 
 KBUILD_CPPFLAGS += $(CDEFINES)
 
@@ -237,6 +238,3 @@ q6_pdr_dlkm-y := $(QDSP6_PDR_OBJS)
 
 obj-$(CONFIG_MSM_QDSP6_NOTIFIER) += q6_notifier_dlkm.o
 q6_notifier_dlkm-y := $(QDSP6_NOTIFIER_OBJS)
-
-# inject some build related information
-DEFINES += -DBUILD_TIMESTAMP=\"$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')\"

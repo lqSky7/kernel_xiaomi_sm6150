@@ -11,7 +11,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-#define DEBUG
+
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/platform_device.h>
@@ -136,7 +136,6 @@ static int wcd937x_init_reg(struct snd_soc_codec *codec)
 	snd_soc_update_bits(codec, WCD937X_MICB1_TEST_CTL_1, 0xFF, 0xFA);
 	snd_soc_update_bits(codec, WCD937X_MICB2_TEST_CTL_1, 0xFF, 0xFA);
 	snd_soc_update_bits(codec, WCD937X_MICB3_TEST_CTL_1, 0xFF, 0xFA);
-
 	return 0;
 }
 
@@ -2731,7 +2730,6 @@ static int wcd937x_bind(struct device *dev)
 	struct wcd937x_pdata *pdata = NULL;
 	struct wcd_ctrl_platform_data *plat_data = NULL;
 
-	dev_dbg(dev, "%s() enter\n", __func__);
 	wcd937x = kzalloc(sizeof(struct wcd937x_priv), GFP_KERNEL);
 	if (!wcd937x)
 		return -ENOMEM;
@@ -2957,12 +2955,9 @@ static int wcd937x_probe(struct platform_device *pdev)
 	struct component_match *match = NULL;
 	int ret;
 
-	pr_info("%s() enter\n", __func__);
 	ret = wcd937x_add_slave_components(&pdev->dev, &match);
-	if (ret) {
-		pr_info("%s() exit with %d\n", __func__, ret);
+	if (ret)
 		return ret;
-	}
 
 	return component_master_add_with_match(&pdev->dev,
 					&wcd937x_comp_ops, match);

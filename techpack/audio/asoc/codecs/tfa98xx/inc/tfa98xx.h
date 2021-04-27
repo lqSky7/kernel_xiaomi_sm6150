@@ -178,11 +178,10 @@ struct tfa98xx {
 
 	struct miscdevice tfa98xx_reg;
 	struct miscdevice tfa98xx_rw;
-	struct miscdevice tfa98xx_rpc;	
+	struct miscdevice tfa98xx_rpc;
 	struct miscdevice tfa98xx_profile;
 	struct miscdevice tfa98xx_control;
 };
 
 
 #endif /* __TFA98XX_INC__ */
-

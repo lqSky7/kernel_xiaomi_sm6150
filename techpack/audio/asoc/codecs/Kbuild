@@ -102,7 +102,9 @@ ifdef CONFIG_WCD9XXX_CODEC_CORE
 	CORE_OBJS += wcd9360/wcd9360-regmap.o
 endif
 
-CDEFINES += -DCONFIG_SND_SOC_FOR_ULTRASOUND_PATH
+ifdef CONFIG_US_PROXIMITY
+	CDEFINES += -DCONFIG_SND_SOC_FOR_ULTRASOUND_PATH
+endif
 
 ifdef CONFIG_SND_SOC_WCD9XXX_V2
 	WCD9XXX_OBJS += wcd-clsh.o
@@ -249,6 +251,3 @@ mbhc_dlkm-y := $(MBHC_OBJS)
 
 obj-$(CONFIG_SND_SOC_MSM_HDMI_CODEC_RX) += hdmi_dlkm.o
 hdmi_dlkm-y := $(HDMICODEC_OBJS)
-
-# inject some build related information
-DEFINES += -DBUILD_TIMESTAMP=\"$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')\"

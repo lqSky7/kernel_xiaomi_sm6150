@@ -1,5 +1,5 @@
 /** Filename: Tfa98xx_genregs.h
- *  This file was generated automatically on 07/01/15 at 10:25:08. 
+ *  This file was generated automatically on 07/01/15 at 10:25:08.
  *  Source file: TFA9891_I2C_list_V11.xls
  */
 

@@ -15,6 +15,14 @@ ifeq ($(CONFIG_ARCH_SDXPOORWILLS), y)
 include $(srctree)/techpack/audio/config/sdxpoorwillsauto.conf
 export
 endif
+ifeq ($(CONFIG_ARCH_SM6150), y)
+include $(srctree)/techpack/audio/config/sm6150auto.conf
+export
+endif
+ifeq ($(CONFIG_ARCH_SDMMAGPIE), y)
+include $(srctree)/techpack/audio/config/sm6150auto.conf
+export
+endif
 ifeq ($(CONFIG_ARCH_SM8150), y)
 include $(srctree)/techpack/audio/config/sm8150auto.conf
 export
@@ -23,8 +31,6 @@ ifeq ($(CONFIG_ARCH_SDMSHRIKE), y)
 include $(srctree)/techpack/audio/config/sm8150auto.conf
 export
 endif
-include $(srctree)/techpack/audio/config/sm6150auto.conf
-export
 
 # Use USERINCLUDE when you must reference the UAPI directories only.
 USERINCLUDE     += \
@@ -36,12 +42,10 @@ LINUXINCLUDE    += \
                 -I$(srctree)/techpack/audio/include/uapi \
                 -I$(srctree)/techpack/audio/include
 
-#for mius start
 ifeq ($(CONFIG_US_PROXIMITY), y)
 LINUXINCLUDE    += \
                 -I$(srctree)/techpack/audio/include/mius
 endif
-#for mius end
 
 ifeq ($(CONFIG_ARCH_SDM845), y)
 LINUXINCLUDE    += \
@@ -59,6 +63,14 @@ ifeq ($(CONFIG_ARCH_SDXPOORWILLS), y)
 LINUXINCLUDE    += \
                 -include $(srctree)/techpack/audio/config/sdxpoorwillsautoconf.h
 endif
+ifeq ($(CONFIG_ARCH_SM6150), y)
+LINUXINCLUDE    += \
+                -include $(srctree)/techpack/audio/config/sm6150autoconf.h
+endif
+ifeq ($(CONFIG_ARCH_SDMMAGPIE), y)
+LINUXINCLUDE    += \
+                -include $(srctree)/techpack/audio/config/sm6150autoconf.h
+endif
 ifeq ($(CONFIG_ARCH_SM8150), y)
 LINUXINCLUDE    += \
                 -include $(srctree)/techpack/audio/config/sm8150autoconf.h
@@ -67,15 +79,8 @@ ifeq ($(CONFIG_ARCH_SDMSHRIKE), y)
 LINUXINCLUDE    += \
                 -include $(srctree)/techpack/audio/config/sm8150autoconf.h
 endif
-LINUXINCLUDE    += \
-                -include $(srctree)/techpack/audio/config/sm6150autoconf.h
 
 obj-y += soc/
 obj-y += dsp/
-#for mius start
-#ifeq ($(CONFIG_US_PROXIMITY), y)
-#obj-y += dsp/mius
-#endif
-#for mius end
 obj-y += ipc/
 obj-y += asoc/
