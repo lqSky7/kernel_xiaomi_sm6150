@@ -44,7 +44,7 @@ function push() {
         -F chat_id="$chat_id" \
         -F "disable_web_page_preview=true" \
         -F "parse_mode=html" \
-        -F caption="{R - PREBUILT - MIUI } Build took $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) second(s). | For <b>Xiaomi Poco X2/Redmi K30 {Q - Q} (phoenix)</b> | <b>$CLANG_VERSION</b>"
+        -F caption="{R - UNAPPENDED } Build took $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) second(s). | For <b>Xiaomi Poco X2/Redmi K30 {Q - Q} (phoenix)</b> | <b>$CLANG_VERSION</b>"
 }
 # Fin Error
 
@@ -82,7 +82,7 @@ fi
 
 function zipping() {
     cd AnyKernel || exit 1
-    zip -r9 Ca5-R-stable-V1-cyka-Tbl.zip *
+    zip -r9 Ca5-Nightly.zip *
     cd ..
 }
 sendinfo
